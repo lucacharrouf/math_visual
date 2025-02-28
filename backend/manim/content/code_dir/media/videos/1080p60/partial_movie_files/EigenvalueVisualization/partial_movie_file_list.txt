@@ -1,0 +1,12 @@
+# This file is used internally by FFMPEG.
+file 'file:/Users/lucacharrouf/Documents/CODINGSTUFF/visualize_mathematics/backend/manim/content/code_dir/media/videos/1080p60/partial_movie_files/EigenvalueVisualization/3977891868_4240072314_223132457.mp4'
+file 'file:/Users/lucacharrouf/Documents/CODINGSTUFF/visualize_mathematics/backend/manim/content/code_dir/media/videos/1080p60/partial_movie_files/EigenvalueVisualization/2852726489_2862699081_2342492440.mp4'
+file 'file:/Users/lucacharrouf/Documents/CODINGSTUFF/visualize_mathematics/backend/manim/content/code_dir/media/videos/1080p60/partial_movie_files/EigenvalueVisualization/2852726489_3201849554_2123992830.mp4'
+file 'file:/Users/lucacharrouf/Documents/CODINGSTUFF/visualize_mathematics/backend/manim/content/code_dir/media/videos/1080p60/partial_movie_files/EigenvalueVisualization/2852726489_2477721675_1030788150.mp4'
+file 'file:/Users/lucacharrouf/Documents/CODINGSTUFF/visualize_mathematics/backend/manim/content/code_dir/media/videos/1080p60/partial_movie_files/EigenvalueVisualization/2852726489_3201849554_1229326962.mp4'
+file 'file:/Users/lucacharrouf/Documents/CODINGSTUFF/visualize_mathematics/backend/manim/content/code_dir/media/videos/1080p60/partial_movie_files/EigenvalueVisualization/2852726489_2452184611_1380802569.mp4'
+file 'file:/Users/lucacharrouf/Documents/CODINGSTUFF/visualize_mathematics/backend/manim/content/code_dir/media/videos/1080p60/partial_movie_files/EigenvalueVisualization/2852726489_2191319482_1521759268.mp4'
+file 'file:/Users/lucacharrouf/Documents/CODINGSTUFF/visualize_mathematics/backend/manim/content/code_dir/media/videos/1080p60/partial_movie_files/EigenvalueVisualization/2852726489_3749211334_531104778.mp4'
+file 'file:/Users/lucacharrouf/Documents/CODINGSTUFF/visualize_mathematics/backend/manim/content/code_dir/media/videos/1080p60/partial_movie_files/EigenvalueVisualization/2852726489_3201849554_352738061.mp4'
+file 'file:/Users/lucacharrouf/Documents/CODINGSTUFF/visualize_mathematics/backend/manim/content/code_dir/media/videos/1080p60/partial_movie_files/EigenvalueVisualization/2852726489_840371482_1420054923.mp4'
+file 'file:/Users/lucacharrouf/Documents/CODINGSTUFF/visualize_mathematics/backend/manim/content/code_dir/media/videos/1080p60/partial_movie_files/EigenvalueVisualization/2852726489_1839128356_2771669125.mp4'
