@@ -100,7 +100,7 @@ class ManimGenerator:
     def generate_code(self, design):
         """Generate Manim code based on the design"""
         formatted_prompt = CODE_GENERATION.format(design_scene=design)
-        response = self._send_prompt(formatted_prompt, max_tokens=4000)
+        response = self._send_prompt(formatted_prompt, max_tokens=5000)
         
         # Extract only the code portion, removing any self-evaluation or other content
         clean_code = extract_code_only(response)

@@ -1,59 +1,40 @@
-import express from "express";
-import Input from '../models/input.model.js'
-import { spawn } from 'child_process'
-import mongoose from "mongoose";
+// routes/input.route.js
+import express from 'express'
+import Input from '../models/input.model.js' // You'll need to create this model
 
-const router = express.Router();
+const router = express.Router()
 
-// Get the input from the user
-router.post('/', async (req, res) => {
-    const input = req.body;
-
-    if(!input.name) {
-        return res.status(400).json({ success:false, message:"Please fill the input"});
-    }
-    const newInput = new Input(input)
-
-    try {
-        await newInput.save();
-        const pythonProcess = spawn('python', ['main.py', JSON.stringify(input)]);
-        
-        let pythonOutput = '';
-        let pythonError = '';
-        
-        // Collect data from the Python script
-        pythonProcess.stdout.on('data', (data) => {
-            pythonOutput += data.toString();
-        });
-        
-        pythonProcess.stderr.on('data', (data) => {
-            pythonError += data.toString();
-        });
-        
-        // When the Python process exits
-        pythonProcess.on('close', (code) => {
-            if (code !== 0) {
-                console.error(`Python script exited with code ${code}`);
-                console.error(`Python error: ${pythonError}`);
-                return res.status(500).json({ 
-                    success: false, 
-                    message: "Error running Python script",
-                    error: pythonError
-                });
-            }
-            
-            // Return the saved input along with Python script output
-            res.status(201).json({ 
-                success: true, 
-                data: newInput,
-                pythonOutput: pythonOutput
-            });
-        });
-
-    } catch(error) {
-        console.error("Error in getting the input: ", error.message);
-        res.status(500).json({ success: false, message: "Server error"});
-    }
+// Add this route to handle the data from Python
+router.post('/save-from-python', async (req, res) => {
+  try {
+    console.log('Received data from Python:', req.body)
+    
+    // Create a new document using your model
+    const newInput = new Input({
+      topic: req.body.topic,
+      code: req.body.code,
+      status: req.body.status
+    })
+    
+    // Save to MongoDB
+    const savedInput = await newInput.save()
+    
+    res.status(201).json({
+      success: true,
+      message: 'Data saved successfully',
+      data: savedInput
+    })
+  } catch (error) {
+    console.error('Error saving input data:', error)
+    res.status(400).json({
+      success: false,
+      message: 'Failed to save data',
+      error: error.message
+    })
+  }
 })
 
-export default router;
+// Handle the feedback
+router.get()
+
+export default router

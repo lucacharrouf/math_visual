@@ -112,6 +112,27 @@ Follow these implementation best practices:
 10. Use FadeIn/FadeOut appropriately to manage visual complexity
 </manim_best_practices>
 
+<manim_technical_details>
+Be careful with these specific Manim technical details:
+1. For transparency/opacity settings:
+   - Use stroke_opacity (not opacity) for lines, arrows, DashedLine, etc.
+   - Use fill_opacity for filled shapes
+   - Use opacity only for VMobject subclass methods that explicitly support it
+
+2. Parameter naming specifics:
+   - DashedLine accepts: stroke_opacity, stroke_width, stroke_color (NOT opacity, width, color)
+   - When in doubt, use the set_style method after creation instead of constructor parameters
+   - For Text objects, use font_size, not size
+
+3. For animation timing:
+   - All animations should include a run_time parameter
+   - Minimum wait() of 0.5 seconds between conceptual steps
+
+4. For proper layering:
+   - Use z_index to control which objects appear in front
+   - Be consistent with z_index values throughout your code
+</manim_technical_details>
+
 <common_errors>
 Avoid these common MANIM implementation issues:
 1. Too many elements on screen at once
@@ -123,7 +144,18 @@ Avoid these common MANIM implementation issues:
 7. Inconsistent or confusing color schemes
 8. Animations that don't clearly connect to the concept being taught
 9. Complex formulas appearing all at once instead of step by step
+10. Incorrect parameter names (e.g., using opacity instead of stroke_opacity for lines)
+11. Not testing object creations and transformations for potential errors
 </common_errors>
+
+<api_integration>
+If your code needs to connect to an API or server:
+1. Ensure proper error handling for all network requests
+2. Verify all endpoint paths match exactly what's implemented on the server
+3. Format request data according to the endpoint's requirements
+4. Check response status codes before processing results
+5. Include a timeout to prevent hanging indefinitely
+</api_integration>
 
 ================ CRITICAL INSTRUCTIONS FOR CODE GENERATION ================
 

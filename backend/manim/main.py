@@ -1,13 +1,20 @@
 from dotenv import load_dotenv
 import os
 import argparse
+import requests
+import json
+import re
 from generate_video import VideoGenerator
 
 def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Generate Manim animations for math concepts")
     parser.add_argument("--topic", type=str, required=True, help="Mathematical topic to animate")
+    parser.add_argument("--server-url", type=str, default="http://localhost:4000", 
+                      help="URL of the Node.js server")
     args = parser.parse_args()
+    
+    print(f"Server URL: {args.server_url}")
     
     # Load environment variables from .env file
     load_dotenv()
@@ -22,12 +29,82 @@ def main():
     video_gen = VideoGenerator(api_key=api_key)
     
     # Generate the video
-    success = video_gen.generate_video(args.topic)
+    result = video_gen.generate_video(args.topic)
+    success = isinstance(result, str) 
     
+    # Save result to MongoDB via the Express server
+    try:
+        # Read the generated code
+        code_content = ""
+        if success:
+            # Extract the code filename from the video path
+            video_path = result
+            safe_topic = os.path.basename(video_path).replace('_animation.mp4', '')
+            code_filename = f"generated_{safe_topic}.py"
+            code_path = os.path.join(video_gen.code_dir, code_filename)
+            
+            if os.path.exists(code_path):
+                with open(code_path, 'r') as file:
+                    code_content = file.read()
+                print(f"Successfully read code from: {code_path}")
+            else:
+                print(f"Code file not found at: {code_path}")
+        else:
+            print(f"Video generation failed, no code to read")
+        
+        # Test server connection before sending data
+        try:
+            test_response = requests.get(args.server_url)
+            print(f"Test connection to server root - Status: {test_response.status_code}")
+            if test_response.status_code != 200:
+                print(f"Warning: Server is not responding correctly. Response: {test_response.text}")
+        except Exception as test_err:
+            print(f"Test connection failed: {str(test_err)}")
+            print("Make sure your Node.js server is running")
+            
+        # Prepare data to send to the server
+        data = {
+            "topic": args.topic,
+            "code": code_content,
+            "status": "completed" if success else "failed"
+        }
+        
+        endpoint_url = f"{args.server_url}/input/save-from-python"
+        print(f"Attempting to send data to: {endpoint_url}")
+        print(f"Data length - Topic: {len(data['topic'])}, Code: {len(data['code'])}")
+        
+        # Send data to the server
+        response = requests.post(
+            endpoint_url,
+            json=data,
+            headers={"Content-Type": "application/json"},
+            timeout=15  # Longer timeout for large code files
+        )
+        
+        print(f"Response status code: {response.status_code}")
+        
+        if response.status_code == 201:
+            print("Successfully saved data to the database")
+        else:
+            print(f"Failed to save data to database. Status code: {response.status_code}")
+            print(f"Response: {response.text}")
+    
+    except requests.exceptions.ConnectionError as conn_err:
+        print(f"Connection error: {str(conn_err)}")
+        print("Is the server running at the specified URL?")
+    except requests.exceptions.Timeout:
+        print(f"Request timed out. Server might be busy or unreachable.")
+    except Exception as e:
+        print(f"Error communicating with the server: {str(e)}")
+        import traceback
+        traceback.print_exc()
+    
+    # Display completion message
     if success:
         print(f"\nProcess completed for topic: '{args.topic}'")
         print(f"Code saved to: {video_gen.code_dir}")
-        print("Next steps: Run the generated Python file with Manim to create the animation")
+        if isinstance(result, str):
+            print(f"Video saved to: {result}")
     else:
         print(f"\nFailed to complete the process for topic: '{args.topic}'")
 

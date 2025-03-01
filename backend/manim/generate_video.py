@@ -46,9 +46,6 @@ class VideoGenerator:
         # Generate code from design
         print("\nGenerating Manim code...")
         code_result = self.generator.generate_code(design)
-
-        print("Full code_result structure:")
-        print(code_result)
         
         if not code_result:
             print("Failed to generate code.")
@@ -70,6 +67,8 @@ class VideoGenerator:
         with open(filepath, 'w') as file:
             file.write(code)
         
+        # Save code path as instance attribute for easy access later
+        self.code_path = filepath
         print(f"Code saved to {filepath}")
         
         # Extract the class name for running Manim
@@ -131,11 +130,11 @@ class VideoGenerator:
             shutil.copy2(source_path, target_path)
             print(f"Animation saved to {target_path}")
             
+            # Save video path as instance attribute
+            self.video_path = target_path
+            
             # Change back to original directory
             os.chdir(original_dir)
-            
-            # Cleanup temporary media files (optional)
-            # shutil.rmtree(temp_media_dir, ignore_errors=True)
             
             return target_path
             
