@@ -4,6 +4,7 @@ import cors from 'cors' // Add CORS support
 import { connectDB } from './config/db.js'
 import videoRoutes from './routes/video.route.js'
 import inputRoutes from './routes/input.route.js'
+import feedbackRoutes from './routes/feedback.route.js'
 
 // Load environment variables from .env file
 dotenv.config({ path: '../.env' })
@@ -31,6 +32,7 @@ app.get('/', (req, res) => {
 // Then your other routes
 app.use("/videos", videoRoutes)
 app.use("/input", inputRoutes)
+app.use("/feedback", feedbackRoutes)
 
 // Basic root route
 app.get('/', (req, res) => {

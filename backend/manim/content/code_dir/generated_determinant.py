@@ -1,331 +1,334 @@
 from manim import *
 
-class DeterminantAnimation(Scene):
+class DeterminantVisualization(Scene):
     def construct(self):
-        # Configure some constants for consistent positioning
-        MATRIX_POSITION = RIGHT * 3.5
-        FORMULA_POSITION = DOWN * 1.5 + RIGHT * 3.5
+        # Setting up constants for consistent use
+        BLUE_VECTOR = "#3090FF"  # i vector color
+        RED_VECTOR = "#FF3030"   # j vector color
+        PURPLE_FILL = "#7030A0"  # unit square color
+        GREEN_FILL = "#30A050"   # transformed area color
         
-        # ---- SECTION 1: INTRODUCTION (0-2s) ----
-        # Setup coordinate plane
+        # Create a coordinate system for our vectors
         axes = Axes(
-            x_range=[-0.5, 4, 1],
-            y_range=[-0.5, 4, 1],
-            axis_config={"include_numbers": True},
+            x_range=[-3, 6, 1],
+            y_range=[-3, 6, 1],
+            axis_config={"include_tip": False, "include_numbers": True},
         ).scale(0.8)
         
-        # Create the unit square
-        unit_square = Square(side_length=1, color=BLUE, fill_opacity=0.5)
-        unit_square.move_to(axes.c2p(0.5, 0.5, 0))
+        # Add grid lines for better visualization
+        grid = NumberPlane(
+            x_range=[-3, 6, 1],
+            y_range=[-3, 6, 1],
+            background_line_style={
+                "stroke_color": LIGHT_GREY,
+                "stroke_width": 1,
+                "stroke_opacity": 0.5
+            }
+        ).scale(0.8)
         
-        # Label the vertices
-        vertex_labels = VGroup()
-        vertices = [(0, 0), (1, 0), (0, 1), (1, 1)]
-        vertex_coords = []
-        for v in vertices:
-            coord = axes.c2p(v[0], v[1], 0)
-            vertex_coords.append(coord)
-            label = MathTex(f"({v[0]}, {v[1]})").scale(0.7)
-            label.next_to(coord, DOWN + LEFT, buff=0.1)
-            vertex_labels.add(label)
-        
-        # Create and display the title
-        title = Text("Determinants", font_size=42)
-        title.to_edge(UP, buff=0.2)
-        
-        # Add the elements to the scene
+        # Start with a clean coordinate plane
         self.play(
-            Create(axes),
-            FadeIn(unit_square),
-            Write(title),
-            run_time=2
+            Create(grid, run_time=1),
+            Create(axes, run_time=1)
         )
-        self.play(FadeIn(vertex_labels), run_time=1)
+        
+        # Create and display the unit vectors
+        i_vector = Arrow(axes.coords_to_point(0, 0), axes.coords_to_point(1, 0), 
+                        color=BLUE_VECTOR, buff=0, stroke_width=4)
+        j_vector = Arrow(axes.coords_to_point(0, 0), axes.coords_to_point(0, 1), 
+                        color=RED_VECTOR, buff=0, stroke_width=4)
+        
+        i_label = MathTex("\\vec{i}", color=BLUE_VECTOR).next_to(i_vector.get_end(), DOWN, buff=0.1)
+        j_label = MathTex("\\vec{j}", color=RED_VECTOR).next_to(j_vector.get_end(), LEFT, buff=0.1)
+        
+        # Create unit square with light purple fill
+        unit_square = Polygon(
+            axes.coords_to_point(0, 0),
+            axes.coords_to_point(1, 0),
+            axes.coords_to_point(1, 1),
+            axes.coords_to_point(0, 1),
+            color=PURPLE_FILL,
+            fill_opacity=0.3,
+            stroke_width=0
+        )
+        
+        # Display unit vectors and unit square
+        self.play(
+            Create(i_vector, run_time=0.8),
+            Create(j_vector, run_time=0.8),
+            FadeIn(unit_square, run_time=0.8)
+        )
+        self.play(
+            Write(i_label),
+            Write(j_label)
+        )
         self.wait(0.5)
         
-        # ---- SECTION 2: MATRIX INTRODUCTION (2-3s) ----
-        # Display the matrix A
-        matrix = MobjectMatrix(
-            [
-                [MathTex("2"), MathTex("1")],
-                [MathTex("1"), MathTex("2")]
-            ],
-            left_bracket="[",
-            right_bracket="]"
-        )
-        matrix.scale(0.9)
-        matrix_label = MathTex("A = ").next_to(matrix, LEFT)
-        matrix_group = VGroup(matrix_label, matrix).move_to(MATRIX_POSITION)
+        # Add labels for unit vectors values
+        i_value = MathTex("[1, 0]", color=BLUE_VECTOR).next_to(i_vector.get_end(), DOWN, buff=0.25)
+        j_value = MathTex("[0, 1]", color=RED_VECTOR).next_to(j_vector.get_end(), RIGHT, buff=0.25)
         
         self.play(
-            FadeIn(matrix_group),
-            run_time=1
+            Write(i_value),
+            Write(j_value)
         )
         self.wait(0.5)
         
-        # ---- SECTION 3: TRANSFORMATION (3-6s) ----
-        # Create the transformed parallelogram
-        # Matrix A = [[2, 1], [1, 2]] transforms the vertices to:
-        # (0,0) → (0,0), (1,0) → (2,1), (0,1) → (1,2), (1,1) → (3,3)
-        transformed_vertices = [
-            axes.c2p(0, 0, 0),
-            axes.c2p(2, 1, 0),
-            axes.c2p(1, 2, 0),
-            axes.c2p(3, 3, 0)
-        ]
+        # ----------- First matrix transformation (Matrix A) -----------
+        # Display Matrix A in top right corner
+        matrix_A = MathTex(
+            "A = \\begin{bmatrix} 3 & 1 \\\\ 2 & 2 \\end{bmatrix}"
+        ).to_corner(UR).shift(LEFT * 0.5 + DOWN * 0.5)
         
+        matrix_A_label = Text("Matrix A", font_size=24).next_to(matrix_A, UP, buff=0.2)
+        
+        self.play(
+            Write(matrix_A, run_time=1),
+            Write(matrix_A_label, run_time=1)
+        )
+        self.wait(0.5)
+        
+        # Calculate the transformed vectors
+        # i' = [3, 2], j' = [1, 2]
+        transformed_i_vector = Arrow(
+            axes.coords_to_point(0, 0), 
+            axes.coords_to_point(3, 2), 
+            color=BLUE_VECTOR, buff=0, stroke_width=4
+        )
+        transformed_j_vector = Arrow(
+            axes.coords_to_point(0, 0), 
+            axes.coords_to_point(1, 2), 
+            color=RED_VECTOR, buff=0, stroke_width=4
+        )
+        
+        # Create the trace paths for the transforming vectors
+        i_path = DashedLine(
+            i_vector.get_end(), 
+            transformed_i_vector.get_end(), 
+            color=BLUE_VECTOR, 
+            stroke_opacity=0.5
+        )
+        j_path = DashedLine(
+            j_vector.get_end(), 
+            transformed_j_vector.get_end(), 
+            color=RED_VECTOR, 
+            stroke_opacity=0.5
+        )
+        
+        # Transformation of vectors and square
+        self.play(
+            Create(i_path, run_time=0.5),
+            Create(j_path, run_time=0.5)
+        )
+        
+        # Update vector value labels
+        transformed_i_value = MathTex("[3, 2]", color=BLUE_VECTOR).next_to(transformed_i_vector.get_end(), RIGHT, buff=0.25)
+        transformed_j_value = MathTex("[1, 2]", color=RED_VECTOR).next_to(transformed_j_vector.get_end(), UP, buff=0.25)
+        
+        # Create the parallelogram after transformation
         transformed_square = Polygon(
-            *[transformed_vertices[i] for i in [0, 1, 3, 2]],  # Correct order for polygon
-            color=GREEN,
-            fill_opacity=0.5
+            axes.coords_to_point(0, 0),
+            axes.coords_to_point(3, 2),
+            axes.coords_to_point(4, 4),
+            axes.coords_to_point(1, 2),
+            color=GREEN_FILL,
+            fill_opacity=0.0,  # Start with zero opacity, will animate it later
+            stroke_width=0
         )
         
-        # Create the movement paths and labels
-        paths = VGroup()
-        path_animations = []
-        transformed_labels = VGroup()
-        
-        new_vertices = [(0, 0), (2, 1), (1, 2), (3, 3)]
-        
-        for i in range(4):
-            # Create dotted path
-            path = DashedLine(
-                vertex_coords[i],
-                transformed_vertices[i],
-                dash_length=0.1,
-                color=YELLOW
-            )
-            paths.add(path)
-            
-            # Create animation for following the path
-            path_animations.append(
-                MoveAlongPath(
-                    vertex_labels[i].copy(), 
-                    path
-                )
-            )
-            
-            # Create new labels
-            new_label = MathTex(f"({new_vertices[i][0]}, {new_vertices[i][1]})").scale(0.7)
-            new_label.next_to(transformed_vertices[i], UP + RIGHT, buff=0.1)
-            transformed_labels.add(new_label)
-        
-        # Animation for the transformation
+        # Animate the transformation
         self.play(
-            Create(paths),
-            run_time=1
-        )
-        
-        self.play(
-            Transform(unit_square, transformed_square),
-            *path_animations,
-            run_time=2
-        )
-        
-        self.play(
-            FadeOut(vertex_labels),
-            FadeIn(transformed_labels),
-            run_time=1
-        )
-        
-        # Add the matrix multiplication explanation
-        transform_label = MathTex(r"A \cdot \begin{bmatrix} x \\ y \end{bmatrix} = \begin{bmatrix} 2x + y \\ x + 2y \end{bmatrix}")
-        transform_label.scale(0.8).next_to(matrix_group, DOWN, buff=0.5)
-        
-        self.play(
-            Write(transform_label),
-            run_time=1
+            ReplacementTransform(i_vector, transformed_i_vector, run_time=1.5),
+            ReplacementTransform(j_vector, transformed_j_vector, run_time=1.5),
+            ReplacementTransform(i_value, transformed_i_value, run_time=1.5),
+            ReplacementTransform(j_value, transformed_j_value, run_time=1.5),
+            ReplacementTransform(unit_square, transformed_square, run_time=1.5),
+            ReplacementTransform(i_label, MathTex("A\\vec{i}", color=BLUE_VECTOR).next_to(transformed_i_vector.get_end(), RIGHT, buff=0.1), run_time=1.5),
+            ReplacementTransform(j_label, MathTex("A\\vec{j}", color=RED_VECTOR).next_to(transformed_j_vector.get_end(), UP, buff=0.1), run_time=1.5),
         )
         self.wait(0.5)
         
-        # ---- SECTION 4: DETERMINANT CALCULATION (6-9s) ----
-        # Show the determinant formula
-        det_formula = MathTex(
-            r"\det(A) = ad - bc"
-        ).move_to(FORMULA_POSITION)
-        
+        # Highlight the parallelogram and show its area
         self.play(
-            Write(det_formula),
+            transformed_square.animate.set_fill(opacity=0.4),
             run_time=1
         )
         
-        # Substitute the values
-        det_calc1 = MathTex(
-            r"\det(A) = 2 \times 2 - 1 \times 1"
-        ).move_to(FORMULA_POSITION)
+        area_text = MathTex("\\text{Area} = 4").next_to(transformed_square, DOWN, buff=0.5)
+        area_text.shift(RIGHT * 1)  # Move it a bit to the right for better visibility
         
-        det_calc2 = MathTex(
-            r"\det(A) = 4 - 1 = 3"
-        ).move_to(FORMULA_POSITION)
-        
-        self.play(
-            ReplacementTransform(det_formula, det_calc1),
-            run_time=1
-        )
+        self.play(Write(area_text))
         self.wait(0.5)
         
-        self.play(
-            ReplacementTransform(det_calc1, det_calc2),
-            run_time=1
-        )
-        self.wait(0.5)
+        # Show the determinant calculation
+        det_calc = MathTex(
+            "\\det(A)", "=", "3 \\times 2", "-", "1 \\times 2", "=", "6", "-", "2", "=", "4"
+        ).next_to(matrix_A, DOWN, buff=0.5)
         
-        # Create a grid to visualize the area
-        unit_grid = VGroup()
+        # Animate the determinant calculation step by step
+        self.play(Write(det_calc[0:2]), run_time=0.8)  # det(A) =
+        self.play(Write(det_calc[2]), run_time=0.6)    # 3 × 2
+        self.play(Write(det_calc[3:5]), run_time=0.6)  # - 1 × 2
+        self.play(Write(det_calc[5:7]), run_time=0.6)  # = 6
+        self.play(Write(det_calc[7:9]), run_time=0.6)  # - 2
+        self.play(Write(det_calc[9:]), run_time=0.6)   # = 4
         
-        # We want to fit exactly 3 unit squares to show area = 3
-        # Calculate the grid lines based on the parallelogram
-        for i in range(3):
-            # Create a line for the diagonal division
-            start_point = axes.c2p(i/3, 2*i/3, 0)
-            end_point = axes.c2p(2 + i/3, 1 + 2*i/3, 0)
-            diagonal = Line(start_point, end_point, stroke_width=2, color=WHITE)
-            unit_grid.add(diagonal)
+        # Highlight the final determinant result
+        det_result_box = SurroundingRectangle(det_calc[-1], color=YELLOW)
+        self.play(Create(det_result_box))
         
-        # Add vertical lines for the grid
-        for i in range(4):
-            x_val = i * 2/3
-            y_val = i * 1/3
-            start = axes.c2p(x_val, y_val, 0)
-            end = axes.c2p(x_val + 1, y_val + 2, 0)
-            line = Line(start, end, stroke_width=2, color=WHITE)
-            unit_grid.add(line)
-        
-        # Fill each unit area with a slightly different shade
-        unit_squares = VGroup()
-        colors = [GREEN_B, GREEN_C, GREEN_D]
-        
-        for i in range(3):
-            unit_square_i = Polygon(
-                axes.c2p(i*2/3, i*1/3, 0),
-                axes.c2p(i*2/3 + 2/3, i*1/3 + 1/3, 0),
-                axes.c2p(i*2/3 + 1/3, i*1/3 + 2/3, 0),
-                axes.c2p(i*2/3, i*1/3, 0),
-                color=colors[i],
-                fill_opacity=0.3,
-                stroke_width=0
-            )
-            unit_squares.add(unit_square_i)
-        
-        # Show the area grid animation
-        self.play(
-            Create(unit_grid),
-            run_time=1
+        # Connect the determinant to the area
+        det_area_arrow = Arrow(
+            det_calc[-1].get_bottom() + DOWN * 0.1,
+            area_text.get_top() + UP * 0.1,
+            color=YELLOW,
+            buff=0.1
         )
         
-        self.play(
-            FadeIn(unit_squares),
-            run_time=1
-        )
-        
-        # Add a label showing the area
-        area_label = Text("Area = 3", font_size=28)
-        area_label.next_to(transformed_square, RIGHT, buff=0.5)
-        
-        self.play(
-            Write(area_label),
-            run_time=0.5
-        )
+        self.play(Create(det_area_arrow))
         self.wait(1)
         
-        # ---- SECTION 5: COMPARISON (9-12s) ----
-        # Remove everything except the title
+        # ----------- Second matrix transformation (Matrix B) -----------
+        # Cleanup previous elements
         self.play(
-            FadeOut(unit_squares),
-            FadeOut(unit_grid),
-            FadeOut(paths),
-            FadeOut(transform_label),
-            FadeOut(transformed_labels),
-            FadeOut(area_label),
-            run_time=1
-        )
-        
-        # Create side-by-side comparison
-        # 1. Original unit square
-        comparison_square = Square(side_length=1, color=BLUE, fill_opacity=0.5)
-        original_area = Text("Area = 1", font_size=24)
-        original_group = VGroup(comparison_square, original_area)
-        original_area.next_to(comparison_square, DOWN, buff=0.2)
-        
-        # 2. Transformed parallelogram
-        comparison_parallelogram = Polygon(
-            *[transformed_vertices[i] for i in [0, 1, 3, 2]],
-            color=GREEN,
-            fill_opacity=0.5
-        ).scale(0.5)
-        transform_area = Text("Area = 3", font_size=24)
-        transform_group = VGroup(comparison_parallelogram, transform_area)
-        transform_area.next_to(comparison_parallelogram, DOWN, buff=0.2)
-        
-        # 3. Equation
-        det_eq = MathTex(r"\det(A) = 3", font_size=36)
-        
-        # Position them in a row
-        comparison = VGroup(original_group, transform_group, det_eq)
-        comparison.arrange(RIGHT, buff=1.2)
-        comparison.next_to(title, DOWN, buff=1)
-        
-        # Show the comparison
-        self.play(
-            FadeOut(axes),
-            FadeOut(unit_square),
+            FadeOut(area_text),
+            FadeOut(det_area_arrow),
+            FadeOut(det_result_box),
+            FadeOut(det_calc),
+            FadeOut(transformed_i_value),
+            FadeOut(transformed_j_value),
+            FadeOut(i_path),
+            FadeOut(j_path),
             FadeOut(transformed_square),
-            FadeOut(matrix_group),
-            FadeOut(det_calc2),
+            FadeOut(matrix_A_label),
             run_time=1
         )
         
-        self.play(
-            FadeIn(comparison),
-            run_time=1.5
-        )
+        # Show Matrix B
+        matrix_B = MathTex(
+            "B = \\begin{bmatrix} 2 & 1 \\\\ -1 & 1 \\end{bmatrix}"
+        ).to_corner(UR).shift(LEFT * 0.5 + DOWN * 0.5)
         
-        # Arrow showing the transformation
-        arrow = Arrow(
-            original_group.get_right() + RIGHT * 0.1,
-            transform_group.get_left() + LEFT * 0.1,
-            buff=0.1,
-            color=YELLOW
-        )
-        arrow_label = Text("× 3", font_size=24, color=YELLOW)
-        arrow_label.next_to(arrow, UP, buff=0.1)
+        matrix_B_label = Text("Matrix B", font_size=24).next_to(matrix_B, UP, buff=0.2)
         
         self.play(
-            GrowArrow(arrow),
-            FadeIn(arrow_label),
+            ReplacementTransform(matrix_A, matrix_B),
+            Write(matrix_B_label)
+        )
+        self.wait(0.5)
+        
+        # Calculate new transformed vectors for matrix B
+        # i' = [2, -1], j' = [1, 1]
+        new_i_vector = Arrow(
+            axes.coords_to_point(0, 0), 
+            axes.coords_to_point(2, -1), 
+            color=BLUE_VECTOR, buff=0, stroke_width=4
+        )
+        new_j_vector = Arrow(
+            axes.coords_to_point(0, 0), 
+            axes.coords_to_point(1, 1), 
+            color=RED_VECTOR, buff=0, stroke_width=4
+        )
+        
+        # Create trace paths for the vectors
+        new_i_path = DashedLine(
+            transformed_i_vector.get_end(), 
+            new_i_vector.get_end(), 
+            color=BLUE_VECTOR, 
+            stroke_opacity=0.5
+        )
+        new_j_path = DashedLine(
+            transformed_j_vector.get_end(), 
+            new_j_vector.get_end(), 
+            color=RED_VECTOR, 
+            stroke_opacity=0.5
+        )
+        
+        # Show the transformation paths
+        self.play(
+            Create(new_i_path, run_time=0.5),
+            Create(new_j_path, run_time=0.5)
+        )
+        
+        # New vector labels
+        new_i_value = MathTex("[2, -1]", color=BLUE_VECTOR).next_to(new_i_vector.get_end(), DOWN, buff=0.25)
+        new_j_value = MathTex("[1, 1]", color=RED_VECTOR).next_to(new_j_vector.get_end(), RIGHT, buff=0.25)
+        
+        # Create the new parallelogram (with reversed orientation)
+        new_parallelogram = Polygon(
+            axes.coords_to_point(0, 0),
+            axes.coords_to_point(2, -1),
+            axes.coords_to_point(3, 0),
+            axes.coords_to_point(1, 1),
+            color=RED_A,
+            fill_opacity=0.0,
+            stroke_width=0
+        )
+        
+        # Animate the transformation
+        self.play(
+            ReplacementTransform(transformed_i_vector, new_i_vector, run_time=1.5),
+            ReplacementTransform(transformed_j_vector, new_j_vector, run_time=1.5),
+            Write(new_i_value, run_time=1),
+            Write(new_j_value, run_time=1),
+            FadeIn(new_parallelogram, run_time=1.5)
+        )
+        self.wait(0.5)
+        
+        # Highlight the new parallelogram
+        self.play(
+            new_parallelogram.animate.set_fill(opacity=0.4),
             run_time=1
         )
+        
+        # Show that this parallelogram has reversed orientation
+        orientation_text = Text("Reversed Orientation", font_size=24, color=RED).next_to(new_parallelogram, DOWN, buff=0.5)
+        orientation_text.shift(RIGHT * 0.5)
+        
+        self.play(Write(orientation_text))
+        
+        # Show the determinant calculation for Matrix B
+        det_calc_B = MathTex(
+            "\\det(B)", "=", "2 \\times 1", "-", "1 \\times (-1)", "=", "2", "+", "1", "=", "3"
+        ).next_to(matrix_B, DOWN, buff=0.5)
+        
+        # Add the negative sign to emphasize orientation reversal
+        negative_sign = MathTex("-").next_to(det_calc_B, LEFT, buff=0.1).set_color(RED)
+        
+        # Animate calculation step by step
+        self.play(Write(det_calc_B[0:2]), run_time=0.7)  # det(B) =
+        self.play(Write(det_calc_B[2]), run_time=0.6)    # 2 × 1
+        self.play(Write(det_calc_B[3:5]), run_time=0.6)  # - 1 × (-1)
+        self.play(Write(det_calc_B[5:7]), run_time=0.6)  # = 2
+        self.play(Write(det_calc_B[7:9]), run_time=0.6)  # + 1
+        self.play(Write(det_calc_B[9:]), run_time=0.6)   # = 3
+        
+        # Add negative sign to show orientation reversal
+        self.play(Write(negative_sign))
+        
+        # Highlight the negative determinant
+        final_result = VGroup(negative_sign, det_calc_B[-1])
+        neg_det_box = SurroundingRectangle(final_result, color=RED)
+        
+        self.play(Create(neg_det_box))
+        
+        # Add explanation text about negative determinant
+        neg_det_text = Text("Negative determinant = Reversed orientation", 
+                          font_size=22, color=RED).next_to(det_calc_B, DOWN, buff=0.5)
+        
+        self.play(Write(neg_det_text))
         self.wait(1)
         
-        # ---- SECTION 6: EXAMPLES (12-15s) ----
-        # Remove the comparison
+        # ----------- Third matrix transformation (Matrix C - Singular) -----------
+        # Cleanup previous elements
         self.play(
-            FadeOut(comparison),
-            FadeOut(arrow),
-            FadeOut(arrow_label),
-            run_time=1
-        )
-        
-        # Create the summary title
-        summary_title = Text("Determinant: The area scaling factor of a transformation", font_size=32)
-        summary_title.to_edge(UP, buff=0.5)
-        
-        # Create the three examples
-        example_scale = 0.7
-        
-        # Example 1: det = 0 (collapse to line)
-        matrix1 = MathTex(r"A_1 = \begin{bmatrix} 1 & 1 \\ 1 & 1 \end{bmatrix}")
-        square1 = Square(side_length=1, color=BLUE, fill_opacity=0.5)
-        
-        # Collapsed square (line)
-        collapsed_square = Line(
-            LEFT * 0.5 + DOWN * 0.5,
-            RIGHT * 0.5 + UP * 0.5,
-            color=RED,
-            stroke_width=4
-        )
-        
-        ex1_det = MathTex(r"\det(A_1) = 0")
-        ex1_caption = Text("Collapses to a line\n(non-invertible)", font_size=20)
-        
-        ex1_group = V
+            FadeOut(neg_det_text),
+            FadeOut(neg_det_box),
+            FadeOut(det_calc_B),
+            FadeOut(negative_sign),
+            FadeOut(orientation_text),
+            FadeOut(new_i_value),
+            FadeOut(new_j_value),
+            FadeOut(new_i_path),
+            FadeOut(new_j_path),
+            FadeOut(new_parallelogram),
