@@ -1,0 +1,20 @@
+- Improve the prompt
+    - Give order to the animation -> On the left of the screen the animation, on the right the text
+- Frontend with all the videos generated so far,
+    - Subpage where you can give feedback to each video + rating
+
+Topics:
+- Vectors (additon, moltiplication)
+- Linear Independence
+- Basis
+- Vector spaces
+- Determinant
+- Eigenvalue and Eigenvectors
+- Determinats
+- Matrix operation
+- Rank
+- Orthogonality
+- SVD
+- PCA
+- Change of Basis
+- Gradient descent

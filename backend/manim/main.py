@@ -36,6 +36,8 @@ def main():
     try:
         # Read the generated code
         code_content = ""
+        video_path = ""
+        
         if success:
             # Extract the code filename from the video path
             video_path = result
@@ -66,25 +68,32 @@ def main():
         data = {
             "topic": args.topic,
             "code": code_content,
-            "status": "completed" if success else "failed"
+            "status": "completed" if success else "failed",
+            "videoPath": video_path if success and os.path.exists(video_path) else ""
         }
         
-        endpoint_url = f"{args.server_url}/input/save-from-python"
+        endpoint_url = f"{args.server_url}/videos/save-from-python"
         print(f"Attempting to send data to: {endpoint_url}")
         print(f"Data length - Topic: {len(data['topic'])}, Code: {len(data['code'])}")
+        print(f"Video path: {data['videoPath']}")
         
         # Send data to the server
         response = requests.post(
             endpoint_url,
             json=data,
             headers={"Content-Type": "application/json"},
-            timeout=15  # Longer timeout for large code files
+            timeout=30  # Longer timeout for processing video files
         )
         
         print(f"Response status code: {response.status_code}")
         
         if response.status_code == 201:
             print("Successfully saved data to the database")
+            try:
+                resp_data = response.json()
+                print(f"Saved video ID: {resp_data.get('data', {}).get('_id', 'unknown')}")
+            except:
+                pass
         else:
             print(f"Failed to save data to database. Status code: {response.status_code}")
             print(f"Response: {response.text}")

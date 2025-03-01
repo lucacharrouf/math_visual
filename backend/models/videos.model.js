@@ -5,18 +5,15 @@ const videoSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    video: {
+    videoPath: {
         type: String, 
         required: true
-    },
-    description: {
+    },   
+    status: {
         type: String,
-        default: ""
-    },
-    duration: {
-        type: Number
-    },
-    
+        enum: ['pending', 'processing', 'completed', 'failed'],
+        default: 'pending'
+    } 
 }, {
     timestamps: true
 });

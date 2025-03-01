@@ -2,36 +2,31 @@ from manim import *
 
 class VectorAdditionScene(Scene):
     def construct(self):
-        # Setup the coordinate system
-        # Using a relatively small scale to ensure vectors fit nicely on screen
+        # Set the stage with a coordinate plane
         axes = Axes(
-            x_range=[-5, 5, 1],
-            y_range=[-5, 5, 1],
+            x_range=[-3, 5],
+            y_range=[-3, 5],
             axis_config={"color": GREY},
-            x_length=7,
-            y_length=7
+            x_length=6,
+            y_length=6
         ).add_coordinates()
         
-        # Create a title for the animation
-        title = Text("Vector Addition", font_size=48).to_edge(UP, buff=0.5)
+        # Create our vectors
+        vector_a = Vector([2, 1], color=BLUE)
+        vector_b = Vector([1, 2], color=RED)
         
-        # Define our vectors - Vector A (red, northeast) and Vector B (blue, southeast)
-        vector_a = Vector([2, 3], color=RED)
-        vector_b = Vector([3, -2], color=BLUE)
+        # Labels for vectors
+        label_a = MathTex("A", color=BLUE).next_to(vector_a.get_center(), DOWN+RIGHT, buff=0.1).scale(0.8)
+        label_b = MathTex("B", color=RED).next_to(vector_b.get_center(), UP+LEFT, buff=0.1).scale(0.8)
         
-        # Label the vectors
-        label_a = MathTex("\\vec{A}", color=RED).next_to(vector_a, UP + RIGHT, buff=0.1)
-        label_b = MathTex("\\vec{B}", color=BLUE).next_to(vector_b, DOWN + RIGHT, buff=0.1)
-        
-        # Section 1: Introduction of coordinate system and vectors
-        # Educational purpose: Establish the visual framework for vector operations
-        self.play(Create(axes), run_time=1)
+        # Initial setup - show coordinate plane
+        self.play(FadeIn(axes), run_time=1)
         self.wait(0.5)
         
-        # Create vectors with GrowArrow for a more dynamic appearance
+        # Show the initial vectors at the origin
         self.play(
-            GrowArrow(vector_a),
-            GrowArrow(vector_b),
+            Create(vector_a),
+            Create(vector_b),
             run_time=1
         )
         self.play(
@@ -39,202 +34,233 @@ class VectorAdditionScene(Scene):
             Write(label_b),
             run_time=0.5
         )
+        self.wait(0.5)
         
-        # Show the title
-        self.play(Write(title), run_time=1)
-        self.wait(1)
+        # --- Head-to-Tail Method ---
+        # Create a copy of vector B to move to the head of vector A
+        vector_b_copy = vector_b.copy()
         
-        # Save original positions for later reference
-        vector_b_original = vector_b.copy()
-        label_b_original = label_b.copy()
+        # Save original positioning of labels for later
+        original_a_pos = label_a.get_center()
+        original_b_pos = label_b.get_center()
         
-        # Section 2: Tip-to-tail method
-        # Educational purpose: Demonstrate the sequential addition of vectors
-        method_text = Text("Tip-to-tail method", font_size=36).to_edge(UP, buff=0.5)
+        # Move vector B to the head of vector A (Head-to-Tail method)
+        # Calculate the end point of vector A to position B
+        end_point_a = vector_a.get_end()
         
-        # Create a faded copy of vector B to leave at origin
-        vector_b_ghost = vector_b.copy().set_stroke(opacity=0.3)
-        label_b_ghost = label_b.copy().set_opacity(0.3)
+        # Create an animation path for the movement of vector B
+        def update_vector_b_copy(mob, alpha):
+            # Start from origin (0,0,0) and move to end_point_a
+            new_start = np.array([0, 0, 0]) * (1 - alpha) + end_point_a * alpha
+            new_vector = Vector([1, 2], color=RED).shift(new_start)
+            mob.become(new_vector)
+            return mob
         
-        # Move vector B to the tip of vector A
-        tip_of_a = vector_a.get_end()
-        vector_b_moved = vector_b.copy().shift(tip_of_a)
-        label_b_moved = label_b.copy().next_to(vector_b_moved, DOWN + RIGHT, buff=0.1)
-        
-        # Animate the transformation
-        self.play(FadeOut(title), run_time=0.5)
+        # Move the label B with vector B
         self.play(
-            Transform(vector_b, vector_b_moved),
-            Transform(label_b, label_b_moved),
-            FadeIn(vector_b_ghost),
-            FadeIn(label_b_ghost),
-            run_time=2
-        )
-        
-        self.play(Write(method_text), run_time=1)
-        self.wait(1)
-        
-        # Section 3: Create the resultant vector C
-        # Educational purpose: Show how vectors A and B combine to form resultant C
-        vector_c = Vector([2 + 3, 3 + (-2)], color=PURPLE)  # A + B = [5, 1]
-        label_c = MathTex("\\vec{C}", color=PURPLE).next_to(vector_c, RIGHT, buff=0.1)
-        
-        # Highlight effect on the resultant vector
-        self.play(GrowArrow(vector_c), run_time=1.5)
-        self.play(
-            Flash(vector_c.get_end(), color=PURPLE, line_length=0.5, flash_radius=0.5),
-            Write(label_c),
-            run_time=0.5
-        )
-        
-        # Display the equation
-        equation = MathTex("\\vec{A} + \\vec{B} = \\vec{C}", color=WHITE)
-        equation.set_color_by_tex("\\vec{A}", RED)
-        equation.set_color_by_tex("\\vec{B}", BLUE)
-        equation.set_color_by_tex("\\vec{C}", PURPLE)
-        equation.to_edge(RIGHT, buff=1).shift(UP)
-        
-        self.play(Write(equation), run_time=1)
-        self.wait(1)
-        
-        # Section 4: Parallelogram method
-        # Educational purpose: Show an alternative but equivalent approach to vector addition
-        paralelogram_title = Text("Parallelogram method", font_size=36).to_edge(UP, buff=0.5)
-        
-        # Move vector B back to origin for parallelogram method
-        self.play(
-            FadeOut(method_text),
-            FadeOut(vector_b_ghost),
-            FadeOut(label_b_ghost),
-            Transform(vector_b, vector_b_original),
-            Transform(label_b, label_b_original),
+            UpdateFromAlphaFunc(vector_b_copy, update_vector_b_copy),
+            label_b.animate.next_to(vector_b_copy.get_end() + end_point_a, UP+LEFT, buff=0.1),
             run_time=1.5
         )
+        self.wait(0.5)
         
-        # Create dashed lines to complete the parallelogram
-        dashed_line1 = DashedLine(
+        # Create the resultant vector C (A+B) as a dashed line
+        resultant_c = DashedLine(
+            start=ORIGIN,
+            end=vector_b_copy.get_end() + end_point_a,
+            color=PURPLE_B,
+            stroke_width=5,
+            dash_length=0.15
+        )
+        
+        # Create solid resultant vector for better visibility
+        resultant_vec = Vector(
+            direction=vector_b_copy.get_end() + end_point_a,
+            color=PURPLE_B
+        )
+        
+        # Label for resultant vector
+        label_c = MathTex("A+B", color=PURPLE_B).next_to(resultant_c.get_center(), RIGHT, buff=0.1).scale(0.8)
+        
+        # Show the resultant vector
+        self.play(
+            Create(resultant_c),
+            Create(resultant_vec),
+            Write(label_c),
+            run_time=1
+        )
+        self.wait(1)
+        
+        # Reset and prepare for parallelogram method
+        self.play(
+            FadeOut(vector_b_copy),
+            FadeOut(resultant_c),
+            FadeOut(resultant_vec),
+            FadeOut(label_c),
+            Transform(label_b, MathTex("B", color=RED).next_to(vector_b.get_center(), UP+LEFT, buff=0.1).scale(0.8)),
+            run_time=1
+        )
+        
+        # --- Parallelogram Method ---
+        # Create copies of vectors for the parallelogram
+        vector_a_copy = vector_a.copy().set_opacity(0.5)
+        vector_b_copy = vector_b.copy().set_opacity(0.5)
+        
+        # Shift the copies to form a parallelogram
+        vector_a_copy.shift(vector_b.get_end())
+        vector_b_copy.shift(vector_a.get_end())
+        
+        # Create dotted lines for the parallelogram
+        dotted_line1 = DashedLine(
             vector_a.get_end(),
             vector_a.get_end() + vector_b.get_end(),
-            color=BLUE_D,
-            stroke_opacity=0.7
+            color=GREY,
+            stroke_opacity=0.8,
+            stroke_width=2
         )
-        dashed_line2 = DashedLine(
+        
+        dotted_line2 = DashedLine(
             vector_b.get_end(),
             vector_a.get_end() + vector_b.get_end(),
-            color=RED_D,
-            stroke_opacity=0.7
+            color=GREY,
+            stroke_opacity=0.8,
+            stroke_width=2
         )
         
+        # Show the parallelogram construction
         self.play(
-            Write(paralelogram_title),
-            Create(dashed_line1),
-            Create(dashed_line2),
-            run_time=1.5
+            Create(vector_a_copy),
+            Create(vector_b_copy),
+            run_time=1
         )
-        
-        # Highlight the diagonal (resultant vector)
         self.play(
-            Indicate(vector_c),
-            Flash(vector_c.get_end(), color=PURPLE, line_length=0.5, flash_radius=0.5),
+            Create(dotted_line1),
+            Create(dotted_line2),
             run_time=1
         )
         self.wait(0.5)
         
-        # Section 5: Real-world example - Boat crossing a river
-        # Educational purpose: Connect abstract math to practical applications
-        real_world_title = Text("Real-world application: River crossing", font_size=36).to_edge(UP, buff=0.5)
+        # Highlight the diagonal as the resultant vector
+        resultant_para = Vector(
+            direction=vector_a.get_end() + vector_b.get_end(),
+            color=PURPLE_B
+        )
         
-        # Prepare to clear current elements
-        current_mobjects = [
-            axes, vector_a, vector_b, vector_c, 
-            label_a, label_b, label_c, equation,
-            paralelogram_title, dashed_line1, dashed_line2
-        ]
+        label_result_para = MathTex("A+B", color=PURPLE_B).next_to(resultant_para.get_center(), DOWN+RIGHT, buff=0.15).scale(0.8)
         
-        # Fade out current elements
         self.play(
-            *[FadeOut(mob) for mob in current_mobjects],
+            Create(resultant_para),
+            Write(label_result_para),
+            run_time=1
+        )
+        self.wait(1)
+        
+        # Clean up for commutativity demonstration
+        self.play(
+            FadeOut(vector_a_copy),
+            FadeOut(vector_b_copy),
+            FadeOut(dotted_line1),
+            FadeOut(dotted_line2),
+            FadeOut(resultant_para),
+            FadeOut(label_result_para),
             run_time=1
         )
         
-        # Create a new coordinate system for the river example
-        river_axes = Axes(
-            x_range=[-5, 5, 1],
-            y_range=[-5, 5, 1],
-            axis_config={"color": GREY},
-            x_length=7,
-            y_length=7
+        # --- Commutativity Demonstration ---
+        # Create a new copy of vector A to move to the head of vector B
+        vector_a_copy = vector_a.copy()
+        
+        # Move vector A to the head of vector B (showing B+A)
+        end_point_b = vector_b.get_end()
+        
+        def update_vector_a_copy(mob, alpha):
+            new_start = np.array([0, 0, 0]) * (1 - alpha) + end_point_b * alpha
+            new_vector = Vector([2, 1], color=BLUE).shift(new_start)
+            mob.become(new_vector)
+            return mob
+        
+        # Move the label A with vector A
+        self.play(
+            UpdateFromAlphaFunc(vector_a_copy, update_vector_a_copy),
+            label_a.animate.next_to(vector_a_copy.get_end() + end_point_b, DOWN+RIGHT, buff=0.1),
+            run_time=1.5
+        )
+        self.wait(0.5)
+        
+        # Create the resultant vector (B+A) - should be the same as (A+B)
+        resultant_ba = Vector(
+            direction=vector_a_copy.get_end() + end_point_b,
+            color=PURPLE_B
         )
         
-        # Create the river banks
-        river_left = Line([-4, -4, 0], [-4, 4, 0], color=BLUE_C, stroke_width=20)
-        river_right = Line([4, -4, 0], [4, 4, 0], color=BLUE_C, stroke_width=20)
-        water = Rectangle(height=8, width=8, fill_color=BLUE, fill_opacity=0.2).move_to([0, 0, 0])
+        label_ba = MathTex("B+A", color=PURPLE_B).next_to(resultant_ba.get_center(), RIGHT, buff=0.1).scale(0.8)
         
-        # Create boat as a simple triangle
-        boat = Triangle(fill_color=GREY, fill_opacity=1).scale(0.3).rotate(-PI/2)
-        
-        # Position at starting point
-        boat.move_to([-3, -3, 0])
-        
-        # Create vectors for the boat example
-        boat_motor = Vector([0, 4], color=RED).shift([-3, -3, 0])  # Direction boat wants to go (straight up)
-        current = Vector([4, 0], color=BLUE).shift([-3, -3, 0])    # Direction of river current (right)
-        actual_path = Vector([4, 4], color=PURPLE).shift([-3, -3, 0])  # Resultant path
-        
-        # Labels for the boat example
-        motor_label = MathTex("\\text{Motor}", color=RED).next_to(boat_motor, LEFT, buff=0.5)
-        current_label = MathTex("\\text{Current}", color=BLUE).next_to(current, DOWN, buff=0.5)
-        resultant_label = MathTex("\\text{Actual Path}", color=PURPLE).next_to(actual_path, RIGHT, buff=0.5)
-        
-        # Show the river scene
         self.play(
-            FadeIn(river_axes),
-            FadeIn(water),
-            Create(river_left),
-            Create(river_right),
-            Write(real_world_title),
+            Create(resultant_ba),
+            Write(label_ba),
+            run_time=1
+        )
+        self.wait(1)
+        
+        # --- Force Application Demonstration ---
+        # Clean up for force application
+        self.play(
+            FadeOut(vector_a),
+            FadeOut(vector_b),
+            FadeOut(vector_a_copy),
+            FadeOut(resultant_ba),
+            FadeOut(label_a),
+            FadeOut(label_b),
+            FadeOut(label_ba),
             run_time=1
         )
         
-        self.play(FadeIn(boat), run_time=0.5)
+        # Create a small circle to represent an object
+        object_circle = Circle(radius=0.2, color=WHITE, fill_opacity=0.5).move_to(ORIGIN)
         
-        # Show the vectors one by one
-        self.play(GrowArrow(boat_motor), Write(motor_label), run_time=1)
-        self.play(GrowArrow(current), Write(current_label), run_time=1)
+        # Create force vectors
+        force1 = Vector([2, 1], color=BLUE)
+        force2 = Vector([1, 2], color=RED)
         
-        # Show the resultant path
+        # Labels for forces
+        label_f1 = MathTex("F_1", color=BLUE).next_to(force1.get_center(), DOWN+RIGHT, buff=0.1).scale(0.8)
+        label_f2 = MathTex("F_2", color=RED).next_to(force2.get_center(), UP+LEFT, buff=0.1).scale(0.8)
+        
+        # Create the net force vector
+        net_force = Vector(
+            direction=[3, 3],
+            color=PURPLE_B
+        )
+        
+        label_net = MathTex("F_{net}", color=PURPLE_B).next_to(net_force.get_center(), RIGHT, buff=0.1).scale(0.8)
+        
+        # Show the object and forces
         self.play(
-            GrowArrow(actual_path),
-            Write(resultant_label),
+            FadeIn(object_circle),
+            run_time=0.5
+        )
+        self.play(
+            Create(force1),
+            Create(force2),
+            Write(label_f1),
+            Write(label_f2),
             run_time=1
         )
-        
-        # Animate the boat moving along the resultant path
-        boat_path = Line([-3, -3, 0], [1, 1, 0], color=WHITE, stroke_opacity=0)
         self.play(
-            MoveAlongPath(boat, boat_path),
-            run_time=2
+            Create(net_force),
+            Write(label_net),
+            run_time=1
         )
+        self.wait(0.5)
         
-        # Final equation to reinforce the concept
-        final_equation = MathTex(
-            "\\vec{\\text{Motor}} + \\vec{\\text{Current}} = \\vec{\\text{Actual Path}}",
-            color=WHITE
+        # Final summary text
+        summary = Text("Vector Addition: A + B = B + A", color=YELLOW).scale(0.8).to_edge(DOWN, buff=0.5)
+        
+        self.play(
+            Write(summary),
+            run_time=1
         )
-        final_equation.set_color_by_tex("\\vec{\\text{Motor}}", RED)
-        final_equation.set_color_by_tex("\\vec{\\text{Current}}", BLUE)
-        final_equation.set_color_by_tex("\\vec{\\text{Actual Path}}", PURPLE)
-        final_equation.to_edge(DOWN, buff=1)
-        
-        self.play(Write(final_equation), run_time=1)
-        
-        # Add a conclusion
-        conclusion = Text("Vector addition combines both magnitude and direction!", 
-                          font_size=24).next_to(final_equation, DOWN, buff=0.5)
-        
-        self.play(Write(conclusion), run_time=1)
-        self.wait(2)
+        self.wait(1)
 
 if __name__ == "__main__":
     scene = VectorAdditionScene()
