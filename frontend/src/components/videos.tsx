@@ -78,10 +78,32 @@ const VideoGallery: React.FC = () => {
       const data = await response.json();
       console.log('Test response:', data);
       alert('Test successful! Check console for details.');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Test failed:', err);
-      //alert(`Test failed: ${err.message}`);
+      alert(`Test failed: ${err.message}`);
     }
+  };
+
+  // Function to fix video path based on the actual directory structure
+  const getFixedVideoPath = (originalPath: string) => {
+    // The issue is that the database has 'videos_dir' but the actual filesystem has 'video_dir'
+    // Also, we need to map this to the correct frontend URL path
+    
+    // First, correct the 'videos_dir' to 'video_dir' discrepancy
+    let correctedPath = originalPath.replace('videos_dir', 'video_dir');
+    
+    // Now map the backend path to the frontend URL path
+    // We want to go from something like:
+    // 'backend/backend/manim/content/video_dir/vector_addition_animation.mp4'
+    // to:
+    // '/videos-content/vector_addition_animation.mp4'
+    
+    // Extract just the filename from the path
+    const parts = correctedPath.split('/');
+    const filename = parts[parts.length - 1];
+    
+    // Construct the new URL with just the filename
+    return `/videos-content/${filename}`;
   };
 
   if (loading) {
@@ -102,6 +124,7 @@ const VideoGallery: React.FC = () => {
             <li>Check that MongoDB is connected properly</li>
             <li>Verify that the '/videos' route is correctly defined in your server</li>
             <li>Check your server console for any error messages</li>
+            <li>Ensure your video paths match the actual directory structure</li>
           </ol>
         </div>
         
@@ -136,19 +159,24 @@ const VideoGallery: React.FC = () => {
         {videos.map((video) => (
           <div key={video._id} className="border rounded-lg overflow-hidden shadow-lg">
             <div className="aspect-w-16 aspect-h-9">
-            <video 
-                src={video.videoPath.replace('/backend/manim/content/videos_dir', '/videos-content')} 
+              <video 
+                src={getFixedVideoPath(video.videoPath)} 
                 controls
                 className="w-full h-full object-cover"
                 preload="metadata"
-                onError={(e) => console.error(`Video error:`)}
-                >
+                onError={(e) => console.error(`Video error for ${video.name}:`, e)}
+              >
                 Your browser does not support the video tag.
-            </video>
+              </video>
             </div>
             <div className="p-4 bg-gray-50">
               <h2 className="text-lg font-semibold truncate">{video.name}</h2>
-              <p className="text-sm text-gray-600 mt-1 truncate">{video.videoPath}</p>
+              <p className="text-sm text-gray-600 mt-1 truncate">
+                Original: {video.videoPath}
+              </p>
+              <p className="text-sm text-gray-600 mt-1 truncate">
+                Fixed: {getFixedVideoPath(video.videoPath)}
+              </p>
             </div>
           </div>
         ))}

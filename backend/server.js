@@ -7,6 +7,7 @@ import { connectDB } from './config/db.js'
 import videoRoutes from './routes/video.route.js'
 import inputRoutes from './routes/input.route.js'
 import feedbackRoutes from './routes/feedback.route.js'
+import fs from 'fs' // For file system operations
 
 // Set up __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url)
@@ -37,28 +38,82 @@ app.use(express.json({ limit: '50mb' })) // Increased limit for video data
 app.use(express.urlencoded({ extended: true, limit: '50mb' }))
 app.use(cors())
 
-app.use('/backend/manim/content/videos_dir', express.static(
-  path.join(process.cwd(), 'backend', 'manim', 'content', 'videos_dir')
-));
+// Define video directories - CORRECTED to use 'video_dir' (singular)
+const videoDir = path.join(process.cwd(), 'backend', 'manim', 'content', 'video_dir');
+console.log('Video directory path:', videoDir);
 
-// Try this more explicit approach
-const videoDir = path.join(process.cwd(), 'backend', 'manim', 'content', 'videos_dir');
+// Check if video directory exists and log its contents
+try {
+  if (fs.existsSync(videoDir)) {
+    console.log('Video directory exists');
+    const files = fs.readdirSync(videoDir);
+    console.log('Files in video directory:', files);
+  } else {
+    console.error('WARNING: Video directory does not exist:', videoDir);
+    
+    // Try to find the actual directory by checking parent directory
+    const parentDir = path.join(process.cwd(), 'backend', 'manim', 'content');
+    if (fs.existsSync(parentDir)) {
+      console.log('Parent directory exists. Contents:');
+      const parentFiles = fs.readdirSync(parentDir);
+      console.log(parentFiles);
+    }
+  }
+} catch (err) {
+  console.error('Error checking video directory:', err);
+}
+
+// Serve videos from BOTH possible directory names to be safe
 app.use('/videos-content', express.static(videoDir));
+app.use('/videos-content', express.static(path.join(process.cwd(), 'backend', 'manim', 'content', 'videos_dir')));
+
+// Also try with absolute path
+const absoluteVideoPath = '/Users/lucacharrouf/Documents/CODINGSTUFF/visualize_mathematics/backend/backend/manim/content/video_dir';
+if (fs.existsSync(absoluteVideoPath)) {
+  console.log('Absolute video path exists, serving from:', absoluteVideoPath);
+  app.use('/videos-content', express.static(absoluteVideoPath));
+}
 
 // Add a test endpoint to check file access
 app.get('/check-videos', (req, res) => {
   try {
-    const files = require('fs').readdirSync(videoDir);
+    // Check both possible directories
+    const results = {
+      singular: { exists: false, files: [] },
+      plural: { exists: false, files: [] },
+      absolute: { exists: false, files: [] }
+    };
+    
+    // Check singular directory (video_dir)
+    const singularDir = path.join(process.cwd(), 'backend', 'manim', 'content', 'video_dir');
+    if (fs.existsSync(singularDir)) {
+      results.singular.exists = true;
+      results.singular.path = singularDir;
+      results.singular.files = fs.readdirSync(singularDir);
+    }
+    
+    // Check plural directory (videos_dir)
+    const pluralDir = path.join(process.cwd(), 'backend', 'manim', 'content', 'videos_dir');
+    if (fs.existsSync(pluralDir)) {
+      results.plural.exists = true;
+      results.plural.path = pluralDir;
+      results.plural.files = fs.readdirSync(pluralDir);
+    }
+    
+    // Check absolute path
+    if (fs.existsSync(absoluteVideoPath)) {
+      results.absolute.exists = true;
+      results.absolute.path = absoluteVideoPath;
+      results.absolute.files = fs.readdirSync(absoluteVideoPath);
+    }
+    
     res.json({ 
-      success: true, 
-      path: videoDir, 
-      exists: true, 
-      files: files 
+      success: true,
+      results: results
     });
   } catch (err) {
     res.json({ 
       success: false, 
-      path: videoDir, 
       error: err.message 
     });
   }
@@ -90,5 +145,5 @@ const PORT = process.env.PORT || 4000
 app.listen(PORT, () => {
     connectDB()
     console.log(`Server is ready at http://localhost:${PORT}`)
-    console.log(`Video files will be served from: ${path.join(process.cwd(), 'backend', 'manim', 'content', 'videos_dir')}`)
+    console.log(`Video files will be served from: ${videoDir}`)
 })
