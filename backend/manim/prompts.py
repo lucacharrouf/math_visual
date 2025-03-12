@@ -1,7 +1,55 @@
 import re
 
-# Original prompts
-DESIGN = '''You are an AI assistant specialized in creating educational mathematical animations. Your task is two-fold: first, to design a 15-second animation explaining a mathematical concept, and then to generate the Python code for this animation using the MANIM library.
+# =============================================================================
+# Core Prompts for Manim Animation Generation
+# =============================================================================
+
+# Concept analysis prompt - breaking down mathematical concepts for visualization
+CONCEPT_BREAKDOWN = '''You are an AI assistant specializing in breaking down mathematical concepts for visualization. Before designing an animation, you need to analyze the concept and identify the best approach to visualize it.
+
+<math_topic>
+{topic}
+</math_topic>
+
+<audience>
+{audience_level}
+</audience>
+
+Analyze this mathematical concept and break it down into visualizable components:
+
+<concept_analysis>
+1. Core Definition: [Provide a clear, concise definition of the concept]
+
+2. Key Components: [List the essential sub-concepts or elements that make up this concept]
+
+3. Intuitive Understanding: [Describe how this concept can be understood intuitively, using analogies or real-world examples]
+
+4. Common Misconceptions: [Identify misconceptions or learning obstacles associated with this concept]
+
+5. Visual Representation Options: [List 3-5 different ways this concept could be visualized, from concrete to abstract]
+
+6. Progressive Learning Path: [Outline a step-by-step progression for introducing this concept visually]
+
+7. Related Concepts: [Identify related concepts that might help provide context]
+
+8. Applications: [Briefly describe where this concept is applied in the real world]
+</concept_analysis>
+
+<visualization_approach>
+Based on the analysis above, recommend the most effective approach for visualizing this concept in a 15-second animation. Explain why this approach would be most effective for building understanding.
+</visualization_approach>
+
+<key_visual_elements>
+List the specific visual elements that should be included in the animation to effectively convey this concept:
+1. [Element 1 with justification]
+2. [Element 2 with justification]
+3. [Element 3 with justification]
+...
+</key_visual_elements>
+'''
+
+# Animation design prompt - creating a description for the animation
+DESIGN = '''You are an AI assistant specialized in creating educational mathematical animations. Your task is to design a 15-second animation explaining a mathematical concept.
 
 Part 1: Animation Design
 
@@ -78,179 +126,9 @@ After your planning, provide your animation description in this format:
 Suggest any improvements if necessary.]
 </self_evaluation>
 
-Your final output for Part 1 should consist only of the <animation_design> and <self_evaluation> sections, and should not duplicate or rehash any of the work you did in the thinking block.
-'''
+Your final output for Part 1 should consist only of the <animation_design> and <self_evaluation> sections, and should not duplicate or rehash any of the work you did in the thinking block.'''
 
-CODE_GENERATION = '''Now, you will generate the MANIM code for the animation you just designed. Here's the design you'll be working with:
-
-<design_scene>
-{design_scene}
-</design_scene>
-
-Before writing the code, wrap your code planning process inside <manim_object_list> tags in your thinking block. List out the main MANIM objects and methods you plan to use. Consider:
-- The main objects and animations needed
-- How to structure the code within a single Scene class
-- Any potential challenges in implementing the design
-- How to ensure proper spacing and positioning of elements
-- Strategies for smooth transitions and object removal
-- How to pace the animation for optimal learning (not too fast, not too slow)
-- Adding comments that explain the educational purpose of each section
-
-It's OK for this section to be quite long.
-
-<manim_best_practices>
-Follow these implementation best practices:
-1. Add clear, educational comments for each major section
-2. Include proper timing with appropriate wait() calls to allow viewers to process information
-3. Use consistent positioning and scaling of elements
-4. Include smooth transitions between concepts
-5. Use color consistently and meaningfully (e.g., same color for same concept)
-6. Implement slow reveal of complex equations or diagrams (piece by piece)
-7. Add text labels that help explain what's happening
-8. For text elements, ensure font size is readable and text is properly positioned
-9. When possible, animate transformations step-by-step rather than all at once
-10. Use FadeIn/FadeOut appropriately to manage visual complexity
-</manim_best_practices>
-
-<manim_technical_details>
-Be careful with these specific Manim technical details:
-1. For transparency/opacity settings:
-   - Use stroke_opacity (not opacity) for lines, arrows, DashedLine, etc.
-   - Use fill_opacity for filled shapes
-   - Use opacity only for VMobject subclass methods that explicitly support it
-
-2. Parameter naming specifics:
-   - DashedLine accepts: stroke_opacity, stroke_width, stroke_color (NOT opacity, width, color)
-   - When in doubt, use the set_style method after creation instead of constructor parameters
-   - For Text objects, use font_size, not size
-
-3. For animation timing:
-   - All animations should include a run_time parameter
-   - Minimum wait() of 0.5 seconds between conceptual steps
-
-4. For proper layering:
-   - Use z_index to control which objects appear in front
-   - Be consistent with z_index values throughout your code
-</manim_technical_details>
-
-<common_errors>
-Avoid these common MANIM implementation issues:
-1. Too many elements on screen at once
-2. Text that's too small or positioned poorly
-3. Animations that move too quickly for comprehension
-4. Lack of visual hierarchy (everything seems equally important)
-5. Objects that go off-screen or are improperly positioned
-6. Missing wait() calls between important transitions
-7. Inconsistent or confusing color schemes
-8. Animations that don't clearly connect to the concept being taught
-9. Complex formulas appearing all at once instead of step by step
-10. Incorrect parameter names (e.g., using opacity instead of stroke_opacity for lines)
-11. Not testing object creations and transformations for potential errors
-</common_errors>
-
-<api_integration>
-If your code needs to connect to an API or server:
-1. Ensure proper error handling for all network requests
-2. Verify all endpoint paths match exactly what's implemented on the server
-3. Format request data according to the endpoint's requirements
-4. Check response status codes before processing results
-5. Include a timeout to prevent hanging indefinitely
-</api_integration>
-
-================ CRITICAL INSTRUCTIONS FOR CODE GENERATION ================
-
-YOUR RESPONSE MUST FOLLOW THIS EXACT FORMAT:
-
-1. FIRST, INCLUDE ONLY THE FOLLOWING MARKER: <CODE_START>
-
-2. IMMEDIATELY AFTER THAT MARKER, WRITE YOUR PYTHON CODE. THE CODE MUST:
-   - Start with necessary imports (e.g., "from manim import *")
-   - Include a single Scene class with all animation logic in the construct method
-   - Be complete and ready to run directly with manim
-   - Contain NO markdown formatting, NO code blocks, NO explanatory text
-   - BE PURE PYTHON CODE ONLY
-   - Include descriptive comments explaining the educational purpose of each section
-   - Handle timing appropriately with wait() calls
-   - MUST END with the following code structure (replace {{ClassName}} with your actual class name):
-     if __name__ == "__main__":
-         scene = {{ClassName}}()
-         scene.render()
-
-3. END YOUR CODE WITH THIS MARKER: <CODE_END>
-
-4. AFTER THE CODE END MARKER, YOU MAY INCLUDE A SELF-EVALUATION:
-   <code_self_evaluation>
-   [Your evaluation here]
-   </code_self_evaluation>
-
-EXAMPLE OF CORRECT FORMAT:
-<CODE_START>
-from manim import *
-
-class MathAnimation(Scene):
-    def construct(self):
-        # Your code here
-        pass
-
-if __name__ == "__main__":
-    scene = MathAnimation()
-    scene.render()
-<CODE_END>
-
-<code_self_evaluation>
-Evaluation comments here...
-</code_self_evaluation>
-
-================ END OF CRITICAL INSTRUCTIONS ================
-
-Remember, the code must be directly executable with the manim library without any modifications or formatting removal. The code MUST include the if __name__ == "__main__" block at the end with scene instantiation and rendering, as shown in the example.
-'''
-
-# New prompts
-
-CONCEPT_BREAKDOWN = '''You are an AI assistant specializing in breaking down mathematical concepts for visualization. Before designing an animation, you need to analyze the concept and identify the best approach to visualize it.
-
-<math_topic>
-{topic}
-</math_topic>
-
-<audience>
-{audience_level}
-</audience>
-
-Analyze this mathematical concept and break it down into visualizable components:
-
-<concept_analysis>
-1. Core Definition: [Provide a clear, concise definition of the concept]
-
-2. Key Components: [List the essential sub-concepts or elements that make up this concept]
-
-3. Intuitive Understanding: [Describe how this concept can be understood intuitively, using analogies or real-world examples]
-
-4. Common Misconceptions: [Identify misconceptions or learning obstacles associated with this concept]
-
-5. Visual Representation Options: [List 3-5 different ways this concept could be visualized, from concrete to abstract]
-
-6. Progressive Learning Path: [Outline a step-by-step progression for introducing this concept visually]
-
-7. Related Concepts: [Identify related concepts that might help provide context]
-
-8. Applications: [Briefly describe where this concept is applied in the real world]
-</concept_analysis>
-
-<visualization_approach>
-Based on the analysis above, recommend the most effective approach for visualizing this concept in a 15-second animation. Explain why this approach would be most effective for building understanding.
-</visualization_approach>
-
-<key_visual_elements>
-List the specific visual elements that should be included in the animation to effectively convey this concept:
-1. [Element 1 with justification]
-2. [Element 2 with justification]
-3. [Element 3 with justification]
-...
-</key_visual_elements>
-'''
-
+# Animation testing prompt - evaluating the animation design
 ANIMATION_TESTING = '''You are an AI assistant specializing in evaluating mathematical animations. You'll review a proposed animation design and identify potential issues before implementation.
 
 <math_topic>
@@ -296,69 +174,96 @@ Based on your analysis, suggest specific improvements to the animation design:
 </design_improvements>
 '''
 
-FEEDBACK_INTEGRATION = '''You are an AI assistant specializing in improving mathematical animations based on user feedback. You'll be given:
-1. The original mathematical concept
-2. The animation code that was generated
-3. User feedback on the animation
+CODE_GENERATION = '''You are an expert in creating mathematical animations using the Manim Python library. Your task is to generate code for an animation about the following topic:
 
-<math_topic>
-{topic}
-</math_topic>
+<topic>
+{{TOPIC}}
+</topic>
 
-<original_code>
-{original_code}
-</original_code>
+The class name for this animation should be:
 
-<user_feedback>
-{user_feedback}
-</user_feedback>
+<class_name>
+{{SAFE_CLASS_NAME}}
+</class_name>
 
-<feedback_tags>
-{feedback_tags}
-</feedback_tags>
+Here is the design specification for the animation:
 
-Your task is to analyze the feedback and suggest specific improvements to the animation. First, identify the key issues mentioned in the feedback and categorize them:
+<design_specification>
+{{design_scene}}
+</design_specification>
 
-<feedback_analysis>
-[Analyze the feedback, identifying specific issues with the animation in terms of:
-- Educational clarity
-- Visual presentation
-- Pacing issues
-- Conceptual gaps
-- Technical execution]
-</feedback_analysis>
+Before writing the code, please plan out the animation in detail. Wrap your planning process in <animation_planning> tags. In your planning:
 
-<proposed_improvements>
-[List specific, actionable changes to the animation that would address each issue, explaining how each change would improve understanding of the concept]
-</proposed_improvements>
+[Planning steps remain the same...]
 
-Finally, provide the revised MANIM code that implements these improvements:
+After planning, generate the Manim code for the animation. Your code must adhere to the following requirements:
+
+[Requirements remain the same...]
+
+After writing the code, perform a self-evaluation. Consider the following:
+
+[Evaluation points remain the same...]
+
+ABSOLUTELY CRITICAL FORMATTING INSTRUCTIONS:
+- You MUST use the EXACT tags specified below
+- DO NOT use markdown formatting or triple backticks for the code section
+- The tags must appear EXACTLY as shown, with no additional characters or spaces
+
+Present your response in the following format:
+
+<animation_planning>
+[Your detailed planning for the animation]
+</animation_planning>
 
 <CODE_START>
-[Your improved code here]
+[Your complete Python code for the Manim animation]
 <CODE_END>
 
-<improvement_summary>
-[Summarize the key improvements made and how they address the feedback]
-</improvement_summary>
-'''
+<code_self_evaluation>
+[Your evaluation of the code, addressing the points mentioned above]
+</code_self_evaluation>
 
-# Helper functions
-def extract_code_only(text):
-    """Extract only the code portion between <CODE_START> and <CODE_END> tags or using fallback methods"""
+IMPORTANT: The code section MUST start with <CODE_START> and end with <CODE_END> exactly as shown - do not use triple backticks or any markdown formatting. This is critical for the automated system to process your response correctly.'''
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
+def extract_code_only(text, topic=None):
+    """Extract code from between <CODE_START> and <CODE_END> tags with topic validation.
+    
+    Args:
+        text: The response text from the API
+        topic: Optional topic for validation
+        
+    Returns:
+        The extracted code if valid, or None if extraction failed or validation failed
+    """
     if not text:
+        print("Error: Empty response received")
         return None
         
-    # Try standard pattern first
+    # Try standard pattern first - this is the primary method that should be used
     pattern = r'<CODE_START>(.*?)<CODE_END>'
     match = re.search(pattern, text, re.DOTALL)
     if match:
-        return match.group(1).strip()
+        code = match.group(1).strip()
+        # If topic is provided, validate the code is about the topic
+        if topic and not validate_topic_relevance(code, topic):
+            print(f"Warning: Extracted code does not appear to be about '{topic}'")
+            return None
+        return code
     
-    # If standard pattern doesn't match, try alternative approaches
+    # If standard pattern doesn't match, we have a formatting problem
     print("Warning: <CODE_START> and <CODE_END> tags not found in response")
     
-    # Try to find code blocks in markdown format
+    # If topic validation is required, don't use fallback methods for safety
+    if topic:
+        print("ERROR: Strict topic validation required but <CODE_START> tags not found")
+        print("Skipping fallback extraction methods for topic safety")
+        return None
+    
+    # Only use fallback methods when topic validation is not required
+    # Look for code blocks in markdown format
     pattern = r'```python\s*(.*?)\s*```'
     match = re.search(pattern, text, re.DOTALL)
     if match:
@@ -369,40 +274,32 @@ def extract_code_only(text):
     match = re.search(pattern, text, re.DOTALL)
     if match:
         code = match.group(1).strip()
-        # Check if it has Python imports or class definitions
         if "import" in code or "class" in code:
             return code
     
-    # Look for Manim code patterns
+    # Last resort fallbacks - these should rarely be needed with improved prompts
     if "from manim import" in text:
         start_idx = text.find("from manim import")
-        # Find a reasonable end point - either end of text or a clear separation
         end_markers = ["\n\n<code_self_evaluation>", "\n\n---", "\n\nThis code"]
-        
         end_idx = len(text)
         for marker in end_markers:
             marker_pos = text.find(marker, start_idx)
             if marker_pos != -1 and marker_pos < end_idx:
                 end_idx = marker_pos
-        
         return text[start_idx:end_idx].strip()
     
-    # Last resort: look for a class definition with Scene
+    # Look for a class definition with Scene
     pattern = r'class\s+\w+\s*\(\s*Scene\s*\).*?def\s+construct\s*\(\s*self\s*\)'
     match = re.search(pattern, text, re.DOTALL)
     if match:
         start_idx = match.start()
-        # Go back to find imports
         import_idx = text.rfind("import", 0, start_idx)
         if import_idx != -1:
-            # Find the beginning of the line with the import
             line_start = text.rfind("\n", 0, import_idx)
             if line_start != -1:
                 start_idx = line_start + 1
             else:
                 start_idx = 0
-                
-        # Try to find the end of the code block
         end_idx = len(text)
         end_markers = ["\n\n<code_self_evaluation>", "\n\n---", "\n\nThis code"]
         for marker in end_markers:
@@ -410,17 +307,131 @@ def extract_code_only(text):
             if marker_pos != -1:
                 end_idx = marker_pos
                 break
-                
         return text[start_idx:end_idx].strip()
     
-    # If all methods fail, return None
     print("Warning: Could not extract code using any method")
     return None
 
+def validate_topic_relevance(code, topic):
+    """Check if code is relevant to the requested topic.
+    
+    Args:
+        code: The extracted code
+        topic: The topic to validate against
+        
+    Returns:
+        True if the code is relevant to the topic, False otherwise
+    """
+    if not code or not topic:
+        return False
+    
+    # Get meaningful keywords from the topic
+    topic_keywords = [word.lower() for word in topic.lower().split() if len(word) > 3]
+    if not topic_keywords:
+        topic_keywords = [topic.lower()]
+    
+    # Add full phrase for multi-word topics
+    if ' ' in topic.lower():
+        topic_keywords.append(topic.lower())
+    
+    # Check class name
+    class_match = re.search(r'class\s+(\w+)', code)
+    class_name = class_match.group(1).lower() if class_match else ""
+    
+    # Check for topic in class name
+    class_relevance = any(keyword in class_name for keyword in topic_keywords)
+    if class_relevance:
+        return True
+    
+    # Check comments
+    comment_lines = [line.split('#')[1].strip() if '#' in line and line.strip()[0] != '#' else "" 
+                    for line in code.split('\n') if '#' in line]
+    comments_text = ' '.join(comment_lines).lower()
+    
+    # Check for topic in comments
+    comment_relevance = any(keyword in comments_text for keyword in topic_keywords)
+    if comment_relevance:
+        return True
+    
+    # Check string literals for topic references
+    string_literals = re.findall(r'"([^"]*)"', code) + re.findall(r"'([^']*)'", code)
+    strings_text = ' '.join(string_literals).lower()
+    
+    # Check for topic in string literals (titles, labels, etc.)
+    string_relevance = any(keyword in strings_text for keyword in topic_keywords)
+    if string_relevance:
+        return True
+    
+    # Check for unrelated topics (known problematic topics)
+    problem_topics = ["kinematic equation", "binary search", "binary tree"]
+    for problem in problem_topics:
+        # Skip if the problem topic is actually the requested topic
+        if any(keyword in problem for keyword in topic_keywords):
+            continue
+            
+        # Check if code is about a different topic
+        if (problem in comments_text or problem in strings_text or problem in class_name):
+            print(f"Warning: Code appears to be about '{problem}' instead of '{topic}'")
+            return False
+    
+    # If none of the checks passed, the code might not be relevant
+    print(f"Warning: Code doesn't contain references to '{topic}'")
+    print(f"Class name: {class_name}")
+    print(f"First 100 chars of code: {code[:100]}...")
+    return False
+
 def extract_section(text, section_name):
-    """Extract content from a specific XML-like section"""
+    """Extract content from a specific XML-like section
+    
+    Args:
+        text: The text to extract from
+        section_name: The name of the section to extract
+        
+    Returns:
+        The extracted section content, or None if not found
+    """
+    if not text or not section_name:
+        return None
+        
     pattern = rf'<{section_name}>(.*?)</{section_name}>'
     match = re.search(pattern, text, re.DOTALL)
     if match:
         return match.group(1).strip()
     return None
+
+def create_topic_safe_classname(topic):
+    """Create a safe class name from a topic
+    
+    Args:
+        topic: The topic to create a class name from
+        
+    Returns:
+        A safe class name based on the topic
+    """
+    # Remove special characters and spaces
+    safe_name = ''.join(c for c in topic if c.isalnum() or c.isspace())
+    # Convert to CamelCase and add Scene suffix
+    words = safe_name.split()
+    camel_case = ''.join(word.capitalize() for word in words)
+    return camel_case + 'Scene'
+
+def format_code_generation_prompt(topic, design_scene):
+    """Format the code generation prompt with topic-specific information
+    
+    Args:
+        topic: The mathematical topic
+        design_scene: The design specification
+        
+    Returns:
+        Formatted prompt string
+    """
+    safe_class_name = create_topic_safe_classname(topic)
+    
+    # Replace placeholders in the prompt
+    formatted_prompt = CODE_GENERATION.format(
+        topic=topic,
+        design_scene=design_scene,
+        safe_class_name=safe_class_name
+    )
+    
+    return formatted_prompt

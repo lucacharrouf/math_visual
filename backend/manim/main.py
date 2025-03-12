@@ -10,6 +10,10 @@ def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Generate Manim animations for math concepts")
     parser.add_argument("--topic", type=str, required=True, help="Mathematical topic to animate")
+    parser.add_argument("--audience", type=str, default="high school", 
+                      help="Target audience level (e.g., elementary, middle school, high school, undergraduate)")
+    parser.add_argument("--feedback", type=str, default=None, 
+                      help="Path to a text file containing user feedback for improving an existing animation")
     parser.add_argument("--server-url", type=str, default="http://localhost:4000", 
                       help="URL of the Node.js server")
     args = parser.parse_args()
@@ -28,8 +32,18 @@ def main():
     # Initialize the video generator
     video_gen = VideoGenerator(api_key=api_key)
     
-    # Generate the video
-    result = video_gen.generate_video(args.topic)
+    # Process user feedback if provided
+    user_feedback = None
+    if args.feedback and os.path.exists(args.feedback):
+        try:
+            with open(args.feedback, 'r') as feedback_file:
+                user_feedback = feedback_file.read()
+            print(f"Loaded user feedback from {args.feedback}")
+        except Exception as e:
+            print(f"Error reading feedback file: {e}")
+    
+    # Generate the video with complete workflow
+    result = video_gen.generate_video(args.topic, args.audience, user_feedback)
     success = isinstance(result, str) 
     
     # Save result to MongoDB via the Express server
@@ -67,9 +81,11 @@ def main():
         # Prepare data to send to the server
         data = {
             "topic": args.topic,
+            "audience": args.audience,
             "code": code_content,
             "status": "completed" if success else "failed",
-            "videoPath": video_path if success and os.path.exists(video_path) else ""
+            "videoPath": video_path if success and os.path.exists(video_path) else "",
+            "hasFeedback": user_feedback is not None
         }
         
         endpoint_url = f"{args.server_url}/videos/save-from-python"
@@ -112,6 +128,7 @@ def main():
     if success:
         print(f"\nProcess completed for topic: '{args.topic}'")
         print(f"Code saved to: {video_gen.code_dir}")
+        print(f"Artifacts saved to: {os.path.join(video_gen.videos_dir, os.path.basename(video_path).replace('_animation.mp4', '') + '_artifacts')}")
         if isinstance(result, str):
             print(f"Video saved to: {result}")
     else:

@@ -1,0 +1,69 @@
+# Animation Evaluation: Eigenvectors
+
+## Novice Viewer Analysis
+
+A novice to linear algebra would likely face several challenges with this animation:
+
+- **Transformation concept**: The very idea of a "transformation" may be unclear. They might wonder what exactly is happening when the grid deforms and what this represents mathematically.
+
+- **Matrix confusion**: The matrix A = [[2,1],[1,2]] appears briefly without explanation of how it relates to the transformation being shown. Novices won't grasp how matrices cause transformations.
+
+- **Eigenvector identification**: The animation doesn't explain why [1,1] and [1,-1] are eigenvectors of this particular matrix. A novice would wonder how these special vectors were determined.
+
+- **Eigenvalue meaning**: When λ₁ = 3 and λ₂ = 1 appear, a novice wouldn't understand how these values were calculated or their mathematical significance.
+
+- **Prior knowledge assumed**: The animation assumes familiarity with vectors, coordinate systems, matrices, and linear transformations—significant prerequisites.
+
+- **Remaining questions**: "How do I find eigenvectors for a different matrix?", "Why are eigenvectors important in applications?", "What does it mean that λ₂ = 1 and the vector doesn't change length?"
+
+## Expert Viewer Analysis
+
+An expert would note several technical issues and missing elements:
+
+- **Verification absence**: The animation doesn't explicitly show the mathematical verification that Av = λv for each eigenvector, which is the defining property.
+
+- **Characteristic equation**: There's no mention of the characteristic equation det(A-λI)=0, which is how eigenvalues are calculated.
+
+- **Eigenspace dimensionality**: The animation doesn't address that eigenvectors associated with the same eigenvalue form a subspace, nor does it touch on dimensionality concepts.
+
+- **Diagonalization context**: Experts would note the absence of context about how eigenvectors relate to diagonalization, which is a crucial application.
+
+- **Inaccuracy with λ₂**: For the matrix A = [[2,1],[1,2]], the eigenvalues are λ₁ = 3 and λ₂ = 1, but the animation describes the second eigenvector as "shrinking" with λ₂ = 1, which is incorrect. A scaling factor of 1 means the length remains the same.
+
+- **Geometric multiplicity**: No discussion of what happens with repeated eigenvalues or defective matrices.
+
+## Cognitive Load Analysis
+
+The animation presents several cognitive load challenges:
+
+- **Initial matrix overload**: The transformation matrix appears briefly in the corner without enough time for viewers to process its connection to what's happening visually.
+
+- **Rapid transition**: The 3-second segments are likely too quick for processing the conceptual shifts, especially between 3-6 seconds when the grid deformation, vector change, and text update all happen simultaneously.
+
+- **Eigenvalue introduction**: The appearance of λ values alongside the transforming eigenvectors divides attention when viewers are trying to focus on directional preservation.
+
+- **Terminology density**: Terms like "transformation," "eigenvectors," and "eigenvalues" are introduced rapidly without sufficient scaffolding.
+
+- **Grid deformation distraction**: While helpful for context, the grid deformation might distract from the specific behavior of the vectors being highlighted.
+
+## Design Improvements
+
+1. **Extend the timeline**: Increase total animation length to 25-30 seconds, allowing concepts to breathe and viewers to process each step fully.
+
+2. **Add matrix-transformation connection**: Include a brief visualization showing how the matrix multiplication A·v works for a vector, connecting the mathematical operation to the visual transformation.
+
+3. **Demonstrate eigenvalue calculation**: Insert a short segment showing λv = Av for an eigenvector, highlighting where the eigenvalues come from.
+
+4. **Correct the second eigenvector behavior**: For λ₂ = 1, show that the vector maintains both its direction AND length (not shrinking as currently described).
+
+5. **Include guided attention cues**: Use subtle highlights or focus effects to direct viewer attention to the most important elements at each moment.
+
+6. **Add interactive pause points**: If the platform allows, include natural pause points where viewers can absorb information before continuing.
+
+7. **Visualize basis transformation**: Show how the eigenvectors can form a basis, and how the transformation becomes simpler (diagonal) when viewed from this basis.
+
+8. **Progressive disclosure of text**: Instead of full text blocks appearing at once, build sentences progressively to guide understanding.
+
+9. **Add optional depth layers**: Include a way for interested viewers to access more technical details (like the characteristic equation) without overloading the main animation.
+
+10. **Include real-world connection**: Add a brief example of why eigenvectors matter in a practical application (like principal component analysis or mechanical vibrations) to motivate the concept.

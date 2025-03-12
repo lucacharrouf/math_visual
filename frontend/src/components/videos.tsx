@@ -153,12 +153,18 @@ const VideoGallery: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Video Gallery ({videos.length} videos)</h1>
+      <h1 className="text-2xl font-bold mb-6">Visual Math ({videos.length} videos)</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {videos.map((video) => (
           <div key={video._id} className="border rounded-lg overflow-hidden shadow-lg">
             <div className="aspect-w-16 aspect-h-9">
+            <div className="p-4 bg-gray-50">
+              <h2 className="text-lg font-semibold truncate">{video.name}</h2>
+              <p className="text-sm text-gray-600 mt-1 truncate">
+                Original: {video.videoPath}
+              </p>
+            </div>
               <video 
                 src={getFixedVideoPath(video.videoPath)} 
                 controls
@@ -168,15 +174,6 @@ const VideoGallery: React.FC = () => {
               >
                 Your browser does not support the video tag.
               </video>
-            </div>
-            <div className="p-4 bg-gray-50">
-              <h2 className="text-lg font-semibold truncate">{video.name}</h2>
-              <p className="text-sm text-gray-600 mt-1 truncate">
-                Original: {video.videoPath}
-              </p>
-              <p className="text-sm text-gray-600 mt-1 truncate">
-                Fixed: {getFixedVideoPath(video.videoPath)}
-              </p>
             </div>
           </div>
         ))}

@@ -29,23 +29,58 @@ class VideoGenerator:
             return class_match.group(1)
         return "MathAnimation"  # Default class name
         
-    def generate_video(self, math_topic, audience_level="high school"):
-        """Generate a Manim animation video for the given math topic"""
-        # Generate design
-        print("Generating animation design...")
-        design_result = self.generator.design_scene(math_topic, audience_level)
+    def generate_video(self, math_topic, audience_level="high school", user_feedback=None):
+        """Generate a Manim animation video for the given math topic using the complete workflow"""
+        print(f"Starting complete workflow for topic: {math_topic}")
         
-        if not design_result:
+        # Step 1: Analyze the concept
+        print("Step 1/5: Analyzing mathematical concept...")
+        concept_results = self.generator.analyze_concept(math_topic, audience_level)
+        
+        if not concept_results:
+            print("Failed to analyze concept.")
+            return False
+            
+        concept_analysis = concept_results.get("concept_analysis", "")
+        print("Concept analysis completed successfully!")
+        
+        # Step 2: Design the animation
+        print("\nStep 2/5: Generating animation design...")
+        design_results = self.generator.design_scene(
+            math_topic, 
+            audience_level, 
+            concept_analysis
+        )
+        
+        if not design_results:
             print("Failed to generate design.")
             return False
             
-        # Extract the animation design section
-        design = design_result.get("animation_design", design_result.get("full_response", ""))
-        print("\nDesign generated successfully!")
+        animation_design = design_results.get("animation_design", "")
+        print("Animation design generated successfully!")
         
-        # Generate code from design
-        print("\nGenerating Manim code...")
-        code_result = self.generator.generate_code(design)
+        # Step 3: Test the animation design
+        print("\nStep 3/5: Testing animation design for improvements...")
+        test_results = self.generator.test_animation_design(
+            math_topic,
+            animation_design
+        )
+        
+        if not test_results:
+            print("Failed to test animation design. Proceeding with original design.")
+            design_improvements = ""
+        else:
+            design_improvements = test_results.get("improvements", "")
+            print("Design testing completed successfully!")
+        
+        # Step 4: Generate code based on enhanced design
+        print("\nStep 4/5: Generating Manim code...")
+        enhanced_design = animation_design
+        if design_improvements:
+            enhanced_design = animation_design + "\n\n" + design_improvements
+        
+        code_result = self.generator.generate_code(enhanced_design, math_topic)
+
         
         if not code_result:
             print("Failed to generate code.")
@@ -57,7 +92,18 @@ class VideoGenerator:
             print("No code found in generator response.")
             return False
             
-        print("\nCode generated successfully!")
+        print("Code generated successfully!")
+
+        print(f"Generated code for '{math_topic}':")
+
+        print("-" * 40)
+        print(code[:500] + "..." if len(code) > 500 else code)  # Print first 500 chars
+        print("-" * 40)
+
+        # Check if the code seems to match the topic
+        topic_keywords = math_topic.lower().split()
+        if not any(keyword in code.lower() for keyword in topic_keywords):
+            print(f"WARNING: Generated code might not match topic '{math_topic}'!")
         
         # Save code as a file
         safe_topic = self._get_safe_filename(math_topic)
@@ -132,6 +178,29 @@ class VideoGenerator:
             
             # Save video path as instance attribute
             self.video_path = target_path
+            
+            # Save workflow artifacts for future reference
+            artifacts_dir = os.path.join(self.videos_dir, f"{safe_topic}_artifacts")
+            os.makedirs(artifacts_dir, exist_ok=True)
+            
+            # Save concept analysis
+            with open(os.path.join(artifacts_dir, "01_concept_analysis.txt"), 'w') as f:
+                f.write(concept_results.get("full_response", ""))
+                
+            # Save design
+            with open(os.path.join(artifacts_dir, "02_animation_design.txt"), 'w') as f:
+                f.write(design_results.get("full_response", ""))
+                
+            # Save testing results
+            if test_results:
+                with open(os.path.join(artifacts_dir, "03_design_testing.txt"), 'w') as f:
+                    f.write(test_results.get("full_response", ""))
+            
+            # Save code generation
+            with open(os.path.join(artifacts_dir, "04_code.py"), 'w') as f:
+                f.write(code)
+                
+            print(f"Workflow artifacts saved to {artifacts_dir}")
             
             # Change back to original directory
             os.chdir(original_dir)

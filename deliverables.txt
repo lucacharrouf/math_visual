@@ -3,6 +3,9 @@
 - Frontend with all the videos generated so far,
     - Subpage where you can give feedback to each video + rating
 
+- Change directory where files are saved
+- Remove text from the video and add it somewhere else
+
 Topics:
 - Vectors (additon, moltiplication)
 - Linear Independence

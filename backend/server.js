@@ -38,41 +38,38 @@ app.use(express.json({ limit: '50mb' })) // Increased limit for video data
 app.use(express.urlencoded({ extended: true, limit: '50mb' }))
 app.use(cors())
 
-// Define video directories - CORRECTED to use 'video_dir' (singular)
+// Define video directories - use both singular and plural directories
 const videoDir = path.join(process.cwd(), 'backend', 'manim', 'content', 'video_dir');
-console.log('Video directory path:', videoDir);
+const videosDir = path.join(process.cwd(), 'backend', 'manim', 'content', 'videos_dir');
 
-// Check if video directory exists and log its contents
+console.log('Video directories to check:');
+console.log('- Singular path:', videoDir);
+console.log('- Plural path:', videosDir);
+
+// Check if video directories exist and log their contents
 try {
   if (fs.existsSync(videoDir)) {
-    console.log('Video directory exists');
+    console.log('Singular video_dir exists');
     const files = fs.readdirSync(videoDir);
-    console.log('Files in video directory:', files);
+    console.log('Files in video_dir:', files);
   } else {
-    console.error('WARNING: Video directory does not exist:', videoDir);
-    
-    // Try to find the actual directory by checking parent directory
-    const parentDir = path.join(process.cwd(), 'backend', 'manim', 'content');
-    if (fs.existsSync(parentDir)) {
-      console.log('Parent directory exists. Contents:');
-      const parentFiles = fs.readdirSync(parentDir);
-      console.log(parentFiles);
-    }
+    console.log('Singular video_dir does not exist');
+  }
+  
+  if (fs.existsSync(videosDir)) {
+    console.log('Plural videos_dir exists');
+    const files = fs.readdirSync(videosDir);
+    console.log('Files in videos_dir:', files);
+  } else {
+    console.log('Plural videos_dir does not exist');
   }
 } catch (err) {
-  console.error('Error checking video directory:', err);
+  console.error('Error checking video directories:', err);
 }
 
-// Serve videos from BOTH possible directory names to be safe
+// Serve videos from BOTH directories to be safe
 app.use('/videos-content', express.static(videoDir));
-app.use('/videos-content', express.static(path.join(process.cwd(), 'backend', 'manim', 'content', 'videos_dir')));
-
-// Also try with absolute path
-const absoluteVideoPath = '/Users/lucacharrouf/Documents/CODINGSTUFF/visualize_mathematics/backend/backend/manim/content/video_dir';
-if (fs.existsSync(absoluteVideoPath)) {
-  console.log('Absolute video path exists, serving from:', absoluteVideoPath);
-  app.use('/videos-content', express.static(absoluteVideoPath));
-}
+app.use('/videos-content', express.static(videosDir));
 
 // Add a test endpoint to check file access
 app.get('/check-videos', (req, res) => {
@@ -80,31 +77,21 @@ app.get('/check-videos', (req, res) => {
     // Check both possible directories
     const results = {
       singular: { exists: false, files: [] },
-      plural: { exists: false, files: [] },
-      absolute: { exists: false, files: [] }
+      plural: { exists: false, files: [] }
     };
     
     // Check singular directory (video_dir)
-    const singularDir = path.join(process.cwd(), 'backend', 'manim', 'content', 'video_dir');
-    if (fs.existsSync(singularDir)) {
+    if (fs.existsSync(videoDir)) {
       results.singular.exists = true;
-      results.singular.path = singularDir;
-      results.singular.files = fs.readdirSync(singularDir);
+      results.singular.path = videoDir;
+      results.singular.files = fs.readdirSync(videoDir);
     }
     
     // Check plural directory (videos_dir)
-    const pluralDir = path.join(process.cwd(), 'backend', 'manim', 'content', 'videos_dir');
-    if (fs.existsSync(pluralDir)) {
+    if (fs.existsSync(videosDir)) {
       results.plural.exists = true;
-      results.plural.path = pluralDir;
-      results.plural.files = fs.readdirSync(pluralDir);
-    }
-    
-    // Check absolute path
-    if (fs.existsSync(absoluteVideoPath)) {
-      results.absolute.exists = true;
-      results.absolute.path = absoluteVideoPath;
-      results.absolute.files = fs.readdirSync(absoluteVideoPath);
+      results.plural.path = videosDir;
+      results.plural.files = fs.readdirSync(videosDir);
     }
     
     res.json({ 
@@ -145,5 +132,7 @@ const PORT = process.env.PORT || 4000
 app.listen(PORT, () => {
     connectDB()
     console.log(`Server is ready at http://localhost:${PORT}`)
-    console.log(`Video files will be served from: ${videoDir}`)
+    console.log(`Video files will be served from both directories:`)
+    console.log(`- ${videoDir}`)
+    console.log(`- ${videosDir}`)
 })
